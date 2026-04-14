@@ -1,21 +1,25 @@
 #!/bin/bash
 set -e
 
-echo "Building undo..."
-cargo build --release
+REPO="kharonsec/undo"
+VERSION="v0.1.0-beta"
+BINARY_NAME="undo"
+RELEASE_ASSET_NAME="undo"
 
-echo "Installing undo..."
-sudo cp target/release/undo /usr/local/bin/
+# Determine installation directory
+INSTALL_DIR="/usr/local/bin"
+if [ ! -w "$INSTALL_DIR" ]; then
+    INSTALL_DIR="$HOME/.local/bin"
+    mkdir -p "$INSTALL_DIR"
+fi
 
-echo "Success! Add the following to your .bashrc or .zshrc to enable hooks:"
-echo '
-rm() {
-    undo record-rm "$@"
-}
-mv() {
-    if [ "$#" -ne 2 ]; then command mv "$@"; else undo record-mv "$1" "$2"; fi
-}
-cp() {
-    if [ "$#" -ne 2 ]; then command cp "$@"; else undo record-cp "$1" "$2"; fi
-}
-'
+echo "Downloading $BINARY_NAME $VERSION from GitHub..."
+URL="https://github.com/$REPO/releases/download/$VERSION/$RELEASE_ASSET_NAME"
+
+curl -L "$URL" -o "$INSTALL_DIR/$BINARY_NAME"
+chmod +x "$INSTALL_DIR/$BINARY_NAME"
+
+echo "Successfully installed $BINARY_NAME to $INSTALL_DIR"
+if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+    echo "Warning: $INSTALL_DIR is not in your PATH. Add it with: export PATH=\$PATH:$INSTALL_DIR"
+fi
